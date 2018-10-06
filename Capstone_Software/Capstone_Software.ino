@@ -38,6 +38,12 @@ float TempSensorStatus(){
     ThermometerReading = ResistorValue / Reading;
     Serial.println(ThermometerReading);
     return ThermometerReading;
+  //From 10/6 working temperature sensor. Reads 24c
+  float temp = (sensorValue)/1023.0 *3.30;
+temp=temp -0.5;
+temp = temp/0.01;
+Serial.println(temp); //should print 145 sensor valie with temp of 21c
+  
 }
 
 int DoorStatusCollect(){
