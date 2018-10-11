@@ -2,22 +2,88 @@
 char ItemID[15];
 int payload;
 int stp;
+
+String HOST = "192.168.137.1";
+String PORT = "80";
+String field = "field1";
+
+int countTrueCommand;
+int countTimeCommand; 
+boolean found = false; 
+int valSensor = 1;
+
+
 void setup() {
   // put your setup code here, to run once:
-Serial.begin(9600);
+Serial2.begin(9600);
+Serial.begin(115200);
+  sendCommand("AT",5,"OK");
+  sendCommand("AT+CIPMUX=1",5,"OK");
 stp=0;
 }
 
 void loop() {
+//--------------------------------------------------------ItemID
   // put your main code here, to run repeatedly:
-if(Serial.available()>0){
-   payload=(Serial.read()); //Read single character from string buffer
+if(Serial2.available()>0){
+   payload=(Serial2.read()); //Read single character from string buffer
    stp=0; //Reset and wait for next keycode. 
 }
 if (payload==0x20 && stp !=1){ //Check for a space before keycode from remote unit. 
-  Serial.readBytesUntil("\r\n",ItemID,15); //Read keycode until newline character
+  Serial2.readBytesUntil("\r\n",ItemID,15); //Read keycode until newline character
   //Serial.print(ItemID); //print out keycode array. 
   stp=1; //Allow for new codes to be read. 
 }
 
+//------------------------------------------------------------------------Wifi
+valSensor = getSensorData();
+ String getData = "GET /ESPDemoCode.php?temp="+String(valSensor)+"&door=1 HTTP/1.1\r\nHost: 192.168.137.1\r\nConnection: close\r\n";
+
+ sendCommand("AT+CIPSTART=0,\"TCP\",\""+ HOST +"\","+ PORT,15,"OK");
+ sendCommand("AT+CIPSEND=0," +String(getData.length()+2),4,">");
+ //sendCommand("AT+CIPSEND=0,92",4,">");
+ Serial.println(getData);delay(1500);countTrueCommand++;
+ sendCommand("AT+CIPCLOSE=0",5,"OK");
+ delay(60000);
 }
+
+int getSensorData(){
+  return random(1000); // Replace with 
+
+//--------------------------------------------------------------------------------
+}
+
+
+void sendCommand(String command, int maxTime, char readReplay[]) {
+  //Serial.print(countTrueCommand);
+  //Serial.print(". at command => ");
+  //Serial.print(command);
+  //Serial.print(" ");
+  while(countTimeCommand < (maxTime*1))
+  {
+    Serial.println(command);//at+cipsend
+    if(Serial.find(readReplay))//ok
+    {
+      found = true;
+      break;
+    }
+  
+    countTimeCommand++;
+  }
+  
+  if(found == true)
+  {
+    //Serial.println("OYI");
+    countTrueCommand++;
+    countTimeCommand = 0;
+  }
+  
+  if(found == false)
+  {
+    Serial.println("Fail");
+    countTrueCommand = 0;
+    countTimeCommand = 0;
+  }
+  
+  found = false;
+ }
