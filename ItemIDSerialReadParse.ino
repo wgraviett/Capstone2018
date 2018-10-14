@@ -5,6 +5,9 @@ char ItemIDPrevious[15];
 int payload;
 int stp;
 int doorpin=4;
+int TempPin=A0;
+int TempSensorValue;
+float Temperature=0;
 
 String HOST = "192.168.137.1";
 String PORT = "80";
@@ -82,7 +85,7 @@ sendtowifi=0;
 if (time%120000==0||ContinueRun==1){
   ContinueRun=1;
 valSensor = getSensorData();
- String getData = "GET /ESPDemoCode.php?temp="+String(valSensor)+" HTTP/1.1\r\nHost: 192.168.137.1\r\nConnection: close\r\n";
+ String getData = "GET /ESPDemoCode.php?temp="+String(TempSensorStatus())+" HTTP/1.1\r\nHost: 192.168.137.1\r\nConnection: close\r\n";
 
  sendCommand("AT+CIPSTART=0,\"TCP\",\""+ HOST +"\","+ PORT,15,"OK");
  sendCommand("AT+CIPSEND=0," +String(getData.length()+2),4,">");
@@ -163,3 +166,14 @@ void sendCommand(String command, int maxTime, char readReplay[]) {
   
   found = false;
  }
+
+float TempSensorStatus(){
+    //Read temperature from thermister. 
+TempSensorValue = analogRead(TempPin);
+
+Temperature = (TempSensorValue-35)/1023.0 *5;
+//Temperature = (TempSensorValue)/1023.0 *3.30;
+Temperature=Temperature -0.5;
+Temperature = Temperature/0.01;
+  return Temperature;
+}
