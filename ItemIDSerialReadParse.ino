@@ -4,6 +4,7 @@ char ItemIDParsed[17];
 char ItemIDPrevious[15];
 int payload;
 int stp;
+int doorpin=4;
 
 String HOST = "192.168.137.1";
 String PORT = "80";
@@ -16,12 +17,15 @@ int valSensor = 1;
 int sendtowifi;
 unsigned long time;
 int ContinueRun;
+int ContinueRun_door;
+
 void setup() {
   // put your setup code here, to run once:
 Serial2.begin(9600);
 Serial.begin(115200);
-  //sendCommand("AT",5,"OK");
- // sendCommand("AT+CIPMUX=1",5,"OK");
+pinMode(doorpin,INPUT);
+  sendCommand("AT",5,"OK");
+  sendCommand("AT+CIPMUX=1",5,"OK");
 stp=0;
 }
 
@@ -78,7 +82,7 @@ sendtowifi=0;
 if (time%120000==0||ContinueRun==1){
   ContinueRun=1;
 valSensor = getSensorData();
- String getData = "GET /ESPDemoCode.php?temp="+String(valSensor)+"&door=1 HTTP/1.1\r\nHost: 192.168.137.1\r\nConnection: close\r\n";
+ String getData = "GET /ESPDemoCode.php?temp="+String(valSensor)+" HTTP/1.1\r\nHost: 192.168.137.1\r\nConnection: close\r\n";
 
  sendCommand("AT+CIPSTART=0,\"TCP\",\""+ HOST +"\","+ PORT,15,"OK");
  sendCommand("AT+CIPSEND=0," +String(getData.length()+2),4,">");
@@ -89,7 +93,27 @@ valSensor = getSensorData();
  //delay(4000);
  ContinueRun=0;
 }
+//--------------------------------------------------------------------------Wifi-Send Door
+if(time%300000==0||ContinueRun_door==1){ //Check door every 5 minutes. 
 
+  if ( digitalRead(doorpin)==HIGH){// Door is open 
+  String getData = "GET /DoorStatusInsert.php?door=1 HTTP/1.1\r\nHost: 192.168.137.1\r\nConnection: close\r\n";
+  sendCommand("AT+CIPSTART=0,\"TCP\",\""+ HOST +"\","+ PORT,15,"OK");
+  sendCommand("AT+CIPSEND=0," +String(getData.length()+2),4,">"); 
+  Serial.println(getData);delay(1500);countTrueCommand++;
+  sendCommand("AT+CIPCLOSE=0",5,"OK");
+  }
+  
+  if ( digitalRead(doorpin)==LOW){ //Door is closed. 
+  String getData = "GET /DoorStatusInsert.php?door=0 HTTP/1.1\r\nHost: 192.168.137.1\r\nConnection: close\r\n";
+  sendCommand("AT+CIPSTART=0,\"TCP\",\""+ HOST +"\","+ PORT,15,"OK");
+  sendCommand("AT+CIPSEND=0," +String(getData.length()+2),4,">"); 
+  Serial.println(getData);delay(1500);countTrueCommand++;
+  sendCommand("AT+CIPCLOSE=0",5,"OK"); 
+    
+  }
+  ContinueRun_door=0;
+}
 
 
 
