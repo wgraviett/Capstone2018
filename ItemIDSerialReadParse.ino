@@ -24,6 +24,7 @@ int ContinueRun_door;
 
 void setup() {
   // put your setup code here, to run once:
+analogReference(EXTERNAL); //used for temperature ADC
 Serial2.begin(9600);
 Serial.begin(115200);
 pinMode(doorpin,INPUT);
