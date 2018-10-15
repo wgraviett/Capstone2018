@@ -40,8 +40,13 @@ MFRC522::MIFARE_Key key;
 
 // Init array that will store new NUID 
 byte nuidPICC[4];
-
+int buzzerAlarmPin = 5;
+int piezopin=6;
+int ContinueRun_Piezo=0;
+unsigned long time;
 void setup() { 
+  pinMode(buzzerAlarmPin,INPUT); //Alarm received from base unit. 
+  pinMode(piezopin,OUTPUT); //Controls Piezo Buzzer on or off
   Serial.begin(9600);
   SPI.begin(); // Init SPI bus
   rfid.PCD_Init(); // Init MFRC522 
@@ -57,6 +62,16 @@ void setup() {
  
 void loop() {
 
+ if(digitalRead(buzzerAlarmPin)==HIGH){ 
+  while(ContinueRun_Piezo<5) { //Check every two minutes if buzzer should run.
+    //Indicates the temp in unit has fallen below range. 
+    tone(piezopin,3000,10000); //run for 30 seconds. 
+   
+      ContinueRun_Piezo++;
+ }
+ delay(20000);
+ ContinueRun_Piezo=0;
+ }
   // Look for new cards
   if ( ! rfid.PICC_IsNewCardPresent())
     return;
