@@ -6,8 +6,12 @@ int payload;
 int stp;
 int doorpin=4;
 int TempPin=A0;
+int AlarmPin=5;
 int TempSensorValue;
 float Temperature=0;
+
+const float MAXTEMPERATURE = 10.00; //Set Temp thresholds for Alarms 
+const float MINTEMPERATURE =4.00;
 
 String HOST = "192.168.137.1";
 String PORT = "80";
@@ -28,6 +32,7 @@ analogReference(EXTERNAL); //used for temperature ADC
 Serial2.begin(9600);
 Serial.begin(115200);
 pinMode(doorpin,INPUT);
+pinMode(AlarmPin,OUTPUT);
   sendCommand("AT",5,"OK");
   sendCommand("AT+CIPMUX=1",5,"OK");
 stp=0;
@@ -95,6 +100,7 @@ valSensor = getSensorData();
  Serial.println(getData);delay(1500);countTrueCommand++;
  sendCommand("AT+CIPCLOSE=0",5,"OK");
  //delay(4000);
+ SensorAlerts(); //Call sensor alerts to check if temp below threshold. 
  ContinueRun=0;
 }
 //--------------------------------------------------------------------------Wifi-Send Door
@@ -178,3 +184,14 @@ Temperature=Temperature -0.5;
 Temperature = Temperature/0.01;
   return Temperature;
 }
+
+void SensorAlerts(){
+if (Temperature <MINTEMPERATURE || Temperature> MAXTEMPERATURE){
+  digitalWrite(5,HIGH); //Alarm buzzer 
+}
+
+if(Temperature >=MINTEMPERATURE && Temperature <= MAXTEMPERATURE){
+  digitalWrite(5,LOW); 
+}
+}
+
