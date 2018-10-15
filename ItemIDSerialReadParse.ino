@@ -172,8 +172,8 @@ float TempSensorStatus(){
     //Read temperature from thermister. 
 TempSensorValue = analogRead(TempPin);
 
-Temperature = (TempSensorValue-35)/1023.0 *5;
-//Temperature = (TempSensorValue)/1023.0 *3.30;
+//Temperature = (TempSensorValue-70)/1023.0 *5;
+Temperature = (TempSensorValue-40)/1023.0 *3.30;
 Temperature=Temperature -0.5;
 Temperature = Temperature/0.01;
   return Temperature;
