@@ -7,6 +7,7 @@ int stp;
 int doorpin=4;
 int TempPin=A0;
 int AlarmPin=5;
+int PowerMonitorPin=6;
 int TempSensorValue;
 float Temperature=0;
 
@@ -22,6 +23,7 @@ int countTimeCommand;
 boolean found = false; 
 int valSensor = 1;
 int sendtowifi;
+int PreviousRead=0; //Read indicator for power monitor, prevents multiple sends of value. 
 unsigned long time;
 int ContinueRun;
 int ContinueRun_door;
@@ -33,6 +35,7 @@ Serial2.begin(9600);
 Serial.begin(115200);
 pinMode(doorpin,INPUT);
 pinMode(AlarmPin,OUTPUT);
+pinMode(PowerMonitorPin,INPUT);
   sendCommand("AT",5,"OK");
   sendCommand("AT+CIPMUX=1",5,"OK");
 stp=0;
@@ -125,7 +128,7 @@ if(time%300000==0||ContinueRun_door==1){ //Check door every 5 minutes.
   ContinueRun_door=0;
 }
 
-
+PowerMonitorCheck();
 
 
  
@@ -192,6 +195,25 @@ if (Temperature <MINTEMPERATURE || Temperature> MAXTEMPERATURE){
 
 if(Temperature >=MINTEMPERATURE && Temperature <= MAXTEMPERATURE){
   digitalWrite(5,LOW); 
+}
+}
+
+void PowerMonitorCheck(){
+if(digitalRead(PowerMonitorPin)==LOW && PreviousRead !=1){
+  String getData = "GET /PowerMonitorInsert.php?power=0 HTTP/1.1\r\nHost: 192.168.137.1\r\nConnection: close\r\n";
+  sendCommand("AT+CIPSTART=0,\"TCP\",\""+ HOST +"\","+ PORT,15,"OK");
+  sendCommand("AT+CIPSEND=0," +String(getData.length()+2),4,">"); 
+  Serial.println(getData);delay(1500);countTrueCommand++;
+  sendCommand("AT+CIPCLOSE=0",5,"OK"); 
+  PreviousRead=1;
+}
+if(digitalRead(PowerMonitorPin) == HIGH && PreviousRead ==1){
+  String getData = "GET /PowerMonitorInsert.php?power=1 HTTP/1.1\r\nHost: 192.168.137.1\r\nConnection: close\r\n";
+  sendCommand("AT+CIPSTART=0,\"TCP\",\""+ HOST +"\","+ PORT,15,"OK");
+  sendCommand("AT+CIPSEND=0," +String(getData.length()+2),4,">"); 
+  Serial.println(getData);delay(1500);countTrueCommand++;
+  sendCommand("AT+CIPCLOSE=0",5,"OK"); 
+  PreviousRead=0; // Enable Low read check for next low reading if applicable. 
 }
 }
 
