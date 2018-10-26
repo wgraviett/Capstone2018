@@ -128,8 +128,9 @@ if(time%300000==0||ContinueRun_door==1){ //Check door every 5 minutes.
   ContinueRun_door=0;
 }
 
+if(time>25000){ //Cause delay when startup so xbee can connect with each other. Otherwise pins are still zero. 
 PowerMonitorCheck();
-
+}
 
  
 } //Loop Close 
